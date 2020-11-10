@@ -1,0 +1,114 @@
+Jacob Hisscock
+
+main
+    MAIN = main
+
+end
+    END = end
+
+if
+    IF = if
+
+while
+    WHILE = while
+
+data
+    DATA = data
+
+algorithm
+    ALGO = algorithm
+
+exit
+    EXIT = exit
+
+integer
+    INT = [+|-]?[0-9]
+
+real
+    REAL = [+|-]?([0-9]*[.]?[0-9]+|[0-9]+[.]?[0-9])
+
+-
+    SUB = "-"
+
+*
+    MULT = "*"
+
+/
+    DIV = "/"
+
+%
+    MOD = "%"
+
+<
+    LT = "<"
+
+<=
+    LTE = "<="
+
+>
+    GT = ">"
+
+>=
+    GTE = ">="
+
+=
+    EQUAL = ":="
+
+<>
+    NTEQUAL = "<>"
+
+&
+    AND = "&"
+
+|
+    OR = "|"
+
+~
+    NOT = "~"
+
+identifier
+    ID = [a-zA-Z]+[a-zA-Z0-9]*
+
+counting
+    COUNT = counting
+
+upwards
+    UP = upwards
+
+downwards
+    DOWN = downwards
+
+to
+    TO = to
+
+if
+    IF = if
+
+else
+    ELSE = else
+
+read
+    READ = read
+
+print
+    PRINT = print
+
+newline
+    NEWLINE = \n
+
+tab
+    TAB = \t
+
+semicolon
+    SEMI = ";"
+
+character
+    CHAR =  .
+
+array
+    ARRAY = [a-zA-Z]+[a-zA-Z0-9]*\[[0-9]+\]
+
+,
+    COMMA = ","
+
+float,string

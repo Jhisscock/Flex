@@ -1,0 +1,15 @@
+main;
+	data:
+		real: tmp;
+		integer: array[30];
+		integer: Estimate, test;
+		real: NewEst;
+		real: Diff[10];
+
+	algorithm:
+		tmp := 20;
+		test := 7;
+		NewEst := 5.5;
+		Estimate := 200;
+
+end main;

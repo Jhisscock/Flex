@@ -1,0 +1,104 @@
+%token  INTEGER
+%token  REAL
+%token  COMMENT
+%token  STRING
+%token  MAIN
+%token  END
+%token  IF
+%token  ELSE
+%token  WHILE
+%token  DATA
+%token  ALGORITHM
+%token  EXIT
+%token  COUNTING
+%token  UPWARDS
+%token  DOWNWARDS
+%token  TO
+%token  READ
+%token  PRINT
+%token  MINUS
+%token  ADD
+%token  MULTIPLY
+%token  DIVIDE
+%token  MOD
+%token  LT
+%token  LTE
+%token  GT
+%token  GTE
+%token  NOTEQUAL
+%token  AND
+%token  OR
+%token  NOT
+%token  DECIMAL
+%token  COMMA
+%token  ASSIGNMENT
+%token  ENDSTATEMENT
+%token  CARRIAGE
+%token  LPAREN
+%token  RPAREN
+%token  LSQBRACKET
+%token  RSQBRACKET
+%token  NEWLINE
+%token  WHITESPACE
+%token  COLON
+%token  TAB
+
+%%
+prog    : explist
+        ;
+
+explist : explist exp NEWLINE {printf("\n");}
+    | exp NEWLINE {printf("\n");}
+    ;
+
+exp     : COMMENT term {printf("\"");}
+    | MAIN term {printf("main");}
+    | DATA term {printf("data");}
+    | ALGORITHM term {printf("algorithm");}
+    | EXIT term {printf("exit");}
+    | END term {printf("end ");}
+    | exp WHITESPACE term {printf(" ");}
+    | TAB term {printf("\t");}
+    | exp COLON term {printf(":");}
+    | WHILE term {printf("while ");}
+    | IF term {printf("if ");}
+    | ELSE term {printf("else ");}
+    | exp COMMA term {printf(", ");}
+    | exp AND term {printf("& ");}
+    | exp OR term {printf("| ");}
+    | exp DIVIDE term {prtintf("/ ");}
+    | exp MULTIPLY term {prtintf("* ");}
+    | exp MOD term {prtintf("% ");}
+    | exp ADD term {prtintf("+ ");}
+    | exp MINUS term {prtintf("- ");}
+    | exp LT term {prtintf("< ");}
+    | exp LTE term {prtintf("<= ");}
+    | exp GT term {prtintf("> ");}
+    | exp GTE term {prtintf(">= ");}
+    | exp NOTEQUAL term {prtintf("<> ");}
+    | COUNTING term {printf("counting ");}
+    | exp DOWNWARDS term {printf("downwards ");}
+    | exp UPWARDS term {printf("upwards ");}
+    | exp TO term {printf("to ");}
+    | PRINT term {printf("print ");}
+    | exp ENDSTATEMENT term {printf(";");}
+    | exp CARRIAGE term {printf("! ");}
+    | term
+    ;
+
+term    : NOT factor {printf("~ ");}
+    | term ASSIGNMENT factor {printf(":= ");}
+    | term DECIMAL factor {printf(".");}
+    | INTEGER factor {printf("integer");}
+    | REAL factor {printf("real");}
+    | PRINT factor {printf("print ");}
+    | READ factor {printf("read ");}
+    | factor
+    ;
+
+factor   : LPAREN exp RPAREN
+         | LSQBRACKET exp RSQBRACKET
+         | VARIABLE {printf("%s ",$1);}
+    ;
+
+%%
