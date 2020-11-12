@@ -22,12 +22,13 @@ struct syntree {
     char *id;
     int op;
     float value;
+    int posistion;
     struct syntree* next; 
 }; 
 
-struct syntree *createSTree(char *identifier, int operation, float v);
+struct syntree *createSTree(char *identifier, int operation, float v, int pos);
 struct syntree *displayTree(void);
-struct syntree* expEval();
+int expEval();
 struct symtable *lookup(struct syntree *node);
 
 

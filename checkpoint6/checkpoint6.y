@@ -85,7 +85,7 @@ identifier : ID
 			|ID LBRACKET INTVALUE RBRACKET
 				{
 					createNode($1, dtype, adCount, TP_ARRAY, $3);
-					adCount++;
+					adCount += $3;
 				}
 		   ;
 
@@ -99,11 +99,19 @@ alg_stmt_list : alg_stmt
 
 alg_stmt : ID ASSIGN INTVALUE SEMICOLON
 				{
-					createSTree($1, 1, (float)$3);
+					createSTree($1, 1, (float)$3, 0);
 				}
 		 | ID ASSIGN REALVALUE SEMICOLON
 				{
-					createSTree($1, 1, $3);
+					createSTree($1, 1, $3, 0);
+				}
+		 | ID LBRACKET INTVALUE RBRACKET ASSIGN INTVALUE SEMICOLON
+				{
+					createSTree($1, 1, (float)$6, $3);
+				}
+		 | ID LBRACKET INTVALUE RBRACKET ASSIGN REALVALUE SEMICOLON
+				{
+					createSTree($1, 1, $6, $3);
 				}
 		 ;
 
