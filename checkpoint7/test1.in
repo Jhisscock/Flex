@@ -1,0 +1,33 @@
+main;
+	data:
+		real: tmp;
+		integer: array[30];
+		integer: Estimate, test;
+		real: NewEst;
+		real: Diff[10];
+
+	algorithm:
+		tmp := 20;
+		print "HI", !, tmp, !;
+		array[15] := 6;
+		Estimate := 200;
+		test := 7;
+		NewEst := 5.5;
+		Diff[7] := 2.1;
+		if ( tmp = 30 )&(NewEst <> 6.0);
+			test := 6;
+			NewEst := 6.1;
+		else;
+			test := 8;
+		end if;
+		if(Estimate <= 200)&(NewEst <> 6.0);
+			tmp := 5.0;
+		end if;
+		Diff[6] := 4.3;
+		if(NewEst >= 7);
+			array[10] := 11;
+		else;
+			array[10] := 12;
+		end if;
+
+end main;
