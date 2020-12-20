@@ -84,17 +84,24 @@
 
 int yyerror();
 extern int yylex();
+extern int adCount;
+extern int charCount(char* str);
+extern struct mathlist* rootMath;
+extern struct symtable *lookup(struct syntree *treeNode);
 int dtype = -1;
 int stmt = 0;
 int lines = 2;
-extern int adCount;
+char* idVal = NULL;
 int elseCheck = 0;
 int condNum = 0;
 int orLine = 0;
-extern int charCount(char* str);
+int andor = -1;
+int whilecount = 0;
+int elsehit = 0;
+int whileArray[128];
 
 
-#line 98 "y.tab.c" /* yacc.c:339  */
+#line 105 "y.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -158,7 +165,18 @@ extern int yydebug;
     EXC = 284,
     STRING = 285,
     AND = 286,
-    OR = 287
+    OR = 287,
+    PLUS = 288,
+    MINUS = 289,
+    MULTIPLY = 290,
+    DIVIDE = 291,
+    WHILE = 292,
+    EXIT = 293,
+    READ = 294,
+    TO = 295,
+    DOWNWARDS = 296,
+    UPWARDS = 297,
+    COUNTING = 298
   };
 #endif
 /* Tokens.  */
@@ -192,19 +210,32 @@ extern int yydebug;
 #define STRING 285
 #define AND 286
 #define OR 287
+#define PLUS 288
+#define MINUS 289
+#define MULTIPLY 290
+#define DIVIDE 291
+#define WHILE 292
+#define EXIT 293
+#define READ 294
+#define TO 295
+#define DOWNWARDS 296
+#define UPWARDS 297
+#define COUNTING 298
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 33 "checkpoint7.y" /* yacc.c:355  */
+#line 40 "checkpoint7.y" /* yacc.c:355  */
 
    char *sval;
    int ival;
    float rval;
+   struct expression *ex;
+   struct mathlist *ml;
 
-#line 208 "y.tab.c" /* yacc.c:355  */
+#line 239 "y.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -221,7 +252,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 225 "y.tab.c" /* yacc.c:358  */
+#line 256 "y.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -463,21 +494,21 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  5
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   110
+#define YYLAST   202
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  33
+#define YYNTOKENS  44
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  20
+#define YYNNTS  27
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  66
+#define YYNRULES  75
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  117
+#define YYNSTATES  143
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   287
+#define YYMAXUTOK   298
 
 #define YYTRANSLATE(YYX)                                                \
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -514,20 +545,22 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
-      25,    26,    27,    28,    29,    30,    31,    32
+      25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
+      35,    36,    37,    38,    39,    40,    41,    42,    43
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    71,    71,    74,    77,    78,    81,    82,    85,    88,
-      92,    98,    99,   102,   107,   114,   115,   118,   119,   122,
-     123,   124,   125,   128,   129,   132,   138,   144,   150,   156,
-     162,   170,   171,   174,   179,   184,   191,   201,   207,   213,
-     219,   225,   231,   236,   242,   248,   254,   260,   266,   272,
-     278,   284,   290,   296,   302,   308,   314,   320,   326,   332,
-     338,   344,   350,   356,   362,   369,   381
+       0,    97,    97,   100,   103,   104,   107,   108,   111,   114,
+     118,   124,   125,   128,   133,   140,   141,   144,   145,   148,
+     149,   150,   151,   152,   153,   156,   157,   160,   169,   178,
+     187,   195,   204,   213,   222,   233,   243,   244,   247,   253,
+     259,   266,   267,   270,   278,   286,   293,   302,   315,   324,
+     334,   344,   355,   365,   368,   376,   384,   392,   400,   408,
+     416,   425,   433,   441,   449,   455,   463,   471,   477,   483,
+     489,   498,   510,   518,   532,   535
 };
 #endif
 
@@ -540,11 +573,13 @@ static const char *const yytname[] =
   "SEMICOLON", "DATA", "COLON", "COMMA", "END", "ALGORITHM", "LBRACKET",
   "RBRACKET", "INTVALUE", "REALVALUE", "ID", "ASSIGN", "IF", "ELSE",
   "PRINT", "NTE", "GTE", "LTE", "GT", "LT", "EQUAL", "LPAREN", "RPAREN",
-  "EXC", "STRING", "AND", "OR", "$accept", "prog", "main_sec", "data_sec",
-  "dec_stmt_list", "dec_stmt", "data_type", "dec_item_list", "identifier",
-  "alg_sec", "alg_stmt_list", "alg_stmt", "print_list", "print_stmt",
-  "if_stmt_list", "if_stmt", "else_stmt", "operation", "end_stmt",
-  "end_sec", YY_NULLPTR
+  "EXC", "STRING", "AND", "OR", "PLUS", "MINUS", "MULTIPLY", "DIVIDE",
+  "WHILE", "EXIT", "READ", "TO", "DOWNWARDS", "UPWARDS", "COUNTING",
+  "$accept", "prog", "main_sec", "data_sec", "dec_stmt_list", "dec_stmt",
+  "data_type", "dec_item_list", "identifier", "alg_sec", "alg_stmt_list",
+  "alg_stmt", "print_list", "print_stmt", "else_stmt", "if_stmt_list",
+  "if_stmt", "while_stmt_list", "while_stmt", "count_stmt", "operation",
+  "exp", "math", "term", "factor", "end_stmt", "end_sec", YY_NULLPTR
 };
 #endif
 
@@ -556,14 +591,15 @@ static const yytype_uint16 yytoknum[] =
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
      275,   276,   277,   278,   279,   280,   281,   282,   283,   284,
-     285,   286,   287
+     285,   286,   287,   288,   289,   290,   291,   292,   293,   294,
+     295,   296,   297,   298
 };
 # endif
 
-#define YYPACT_NINF -68
+#define YYPACT_NINF -95
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-68)))
+  (!!((Yystate) == (-95)))
 
 #define YYTABLE_NINF -1
 
@@ -572,20 +608,23 @@ static const yytype_uint16 yytoknum[] =
 
   /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
      STATE-NUM.  */
-static const yytype_int8 yypact[] =
+static const yytype_int16 yypact[] =
 {
-      16,     1,    23,    29,   -68,   -68,    43,    38,     7,    72,
-      71,   -68,   -68,     7,   -68,    74,    32,    78,   -68,   -68,
-      68,    -8,    59,   -10,    32,   -68,   -68,    79,    75,    -1,
-     -68,    76,    26,    39,    41,    44,    46,    48,    50,    73,
-      -3,   -68,    82,    83,    84,    -4,   -68,   -68,   -68,    80,
-     -68,    68,    85,    89,    90,   -68,   -68,   -68,   -68,   -68,
-     -68,   -68,   -68,   -68,   -68,   -68,   -68,    69,    32,   -68,
-     -68,   -68,   -68,   -68,   -68,    86,   -68,    21,   -68,   -68,
-       2,    12,   -68,    52,    54,    56,    58,    60,    62,    64,
-     -68,   -68,    87,    94,    32,   -68,    95,    96,   -68,   -68,
-     -68,   -68,   -68,   -68,   -68,   -68,   -68,   -68,   -68,   -68,
-      97,   -68,    19,   -68,   -68,   -68,   -68
+       0,    38,    52,    56,   -95,   -95,    68,    67,    10,    76,
+      86,   -95,   -95,    10,   -95,    91,    89,    92,   -95,   -95,
+      84,   -95,   -95,   113,    32,    74,   -12,    32,    32,    32,
+      32,    32,    32,   126,   100,    89,   -95,   -95,   -95,   -95,
+     117,   112,    15,   -95,   119,   132,   125,   -14,    31,   -95,
+     140,   139,    74,    33,   137,   149,    35,   -95,   -14,   -14,
+     -14,   -14,   -14,   -14,   140,   154,   126,   -95,    28,    89,
+     -95,   -95,   153,   -95,    84,   146,   157,   -95,    32,    32,
+      32,    32,   144,    89,   -95,   -95,   159,   -95,   -95,   -95,
+     -95,   152,    89,   -95,   167,   168,    65,   170,   -95,   153,
+     171,    31,    31,   -95,   -95,    41,    12,   172,    61,    65,
+     147,   148,    25,   -95,   -95,   180,   -95,   -95,   -95,   183,
+      89,   -95,   181,   -95,   -95,   -95,   177,   178,   187,   188,
+     189,   -95,   -95,    65,   -95,   190,   191,   -95,   -95,   -95,
+     -95,   -95,   -95
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -595,30 +634,35 @@ static const yytype_uint8 yydefact[] =
 {
        0,     0,     0,     0,     3,     1,     0,     0,     4,     0,
        0,     9,    10,     5,     6,     0,    15,     0,     2,     7,
-       0,     0,     0,     0,    16,    17,    19,     0,    13,     0,
-      11,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,    31,    27,    29,    25,     0,    23,    18,    66,     0,
-       8,     0,     0,     0,     0,    61,    63,    45,    47,    49,
-      51,    53,    55,    57,    59,    41,    43,     0,     0,    32,
-      28,    30,    26,    20,    24,     0,    12,     0,    37,    38,
-      33,     0,    14,     0,     0,     0,     0,     0,     0,     0,
-      34,    35,     0,     0,     0,    22,     0,     0,    62,    64,
-      46,    48,    50,    52,    54,    56,    58,    60,    42,    44,
-       0,    36,     0,    39,    40,    65,    21
+       0,    68,    69,    70,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,    16,    17,    24,    53,    61,
+       0,    13,     0,    11,     0,    70,    51,    60,    64,    67,
+       0,     0,    36,    29,    33,    27,     0,    25,    54,    58,
+      57,    56,    55,    59,     0,     0,    41,    46,     0,     0,
+      18,    75,     0,     8,     0,     0,     0,    49,     0,     0,
+       0,     0,     0,     0,    37,    30,     0,    34,    28,    19,
+      26,     0,     0,    42,     0,     0,     0,     0,    12,    71,
+       0,    62,    63,    66,    65,    39,     0,     0,    44,     0,
+       0,     0,     0,    23,    14,    52,    71,    40,    38,     0,
+       0,    22,    31,    45,    43,    20,     0,     0,     0,     0,
+       0,    50,    35,     0,    32,     0,     0,    72,    73,    74,
+      21,    47,    48
 };
 
   /* YYPGOTO[NTERM-NUM].  */
-static const yytype_int8 yypgoto[] =
+static const yytype_int16 yypgoto[] =
 {
-     -68,   -68,   -68,   -68,   -68,    91,   -68,   -68,    55,   -68,
-     -67,   -24,   -68,    63,   -68,    67,   -68,    70,    -2,   -68
+     -95,   -95,   -95,   -95,   -95,   185,   -95,   -95,   127,   -95,
+     -67,   -35,   -95,   143,   -95,   150,   -95,   134,   -95,   -95,
+     -10,   -22,    90,    16,   -21,   -94,   -95
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     2,     3,     7,    13,    14,    15,    29,    30,    10,
-      24,    25,    45,    46,    40,    41,    94,    26,    95,    18
+      -1,     2,     3,     7,    13,    14,    15,    42,    43,    10,
+      35,    36,    56,    57,   120,    51,    52,    65,    66,    69,
+      37,    38,    47,    48,    39,   113,    18
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -626,76 +670,99 @@ static const yytype_int8 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_uint8 yytable[] =
 {
-      47,    81,    73,    68,    31,    50,    42,     4,    51,    32,
-      11,    12,    42,    33,    34,    35,    36,    37,    38,    43,
-      44,     1,    92,     5,    39,    43,    44,   112,    21,    92,
-      22,    93,    23,    90,    91,    21,     6,    22,    83,    23,
-      53,    54,    84,    85,    86,    87,    88,    89,    21,     9,
-      22,     8,    23,    55,    56,    57,    58,    47,    59,    60,
-      61,    62,    63,    64,    65,    66,    96,    97,    98,    99,
-     100,   101,   102,   103,   104,   105,   106,   107,   108,   109,
-      16,    17,    20,    27,    28,    48,    39,    49,    47,    21,
-      52,    70,    71,    72,    75,    78,    79,    80,    77,    82,
-     111,   113,   114,   115,    19,   110,    76,    69,    74,    67,
-     116
+      70,    46,    96,    49,    53,     1,    49,    49,    49,    49,
+      49,    49,   121,    11,    12,   125,   106,    54,    55,    78,
+      79,    73,   112,    67,    74,   109,    21,    22,    23,    24,
+      25,   119,    26,    27,    28,    29,    30,    31,    32,   140,
+      82,    89,    85,   128,     4,    86,    21,    22,    45,    33,
+      97,    53,     5,   133,    91,    34,    67,    49,    49,   103,
+     104,    70,   129,     6,    54,    55,    80,    81,   130,    94,
+      95,    70,   117,   118,    70,   112,     8,   115,     9,    21,
+      22,    23,    24,    25,    16,    26,    27,    28,    29,    30,
+      31,    32,   123,   124,   101,   102,    17,    40,    70,    20,
+      41,    50,    33,    21,    22,    23,    24,    25,    34,    26,
+      27,    28,    29,    30,    31,    32,    68,    58,    59,    60,
+      61,    62,    63,    71,    72,    44,    33,    21,    22,    45,
+      24,    77,    34,    75,    27,    28,    29,    30,    31,    32,
+      21,    22,    23,    24,    76,    83,    87,    27,    28,    29,
+      30,    31,    32,    64,    21,    22,    23,    24,    88,    99,
+      92,    27,    28,    29,    30,    31,    32,    21,    22,    45,
+      24,   100,   105,   107,    27,    28,    29,    30,    31,    32,
+     108,   110,   111,   114,   116,   122,   131,   126,   127,   132,
+     134,   135,   136,   137,   138,   139,   141,   142,    19,    90,
+      93,    98,    84
 };
 
 static const yytype_uint8 yycheck[] =
 {
-      24,    68,     6,     6,    12,     6,    16,     6,     9,    17,
-       3,     4,    16,    21,    22,    23,    24,    25,    26,    29,
-      30,     5,    10,     0,    27,    29,    30,    94,    16,    10,
-      18,    19,    20,    31,    32,    16,     7,    18,    17,    20,
-      14,    15,    21,    22,    23,    24,    25,    26,    16,    11,
-      18,     8,    20,    14,    15,    14,    15,    81,    14,    15,
-      14,    15,    14,    15,    14,    15,    14,    15,    14,    15,
-      14,    15,    14,    15,    14,    15,    14,    15,    14,    15,
-       8,    10,     8,     5,    16,     6,    27,    12,   112,    16,
-      14,     9,     9,     9,    14,     6,     6,    28,    13,    13,
-       6,     6,     6,     6,    13,    18,    51,    40,    45,    39,
-     112
+      35,    23,    69,    24,    16,     5,    27,    28,    29,    30,
+      31,    32,   106,     3,     4,   109,    83,    29,    30,    33,
+      34,     6,    10,    33,     9,    92,    14,    15,    16,    17,
+      18,    19,    20,    21,    22,    23,    24,    25,    26,   133,
+      50,     6,     9,    18,     6,    12,    14,    15,    16,    37,
+      72,    16,     0,   120,    64,    43,    66,    78,    79,    80,
+      81,    96,    37,     7,    29,    30,    35,    36,    43,    41,
+      42,   106,    31,    32,   109,    10,     8,    99,    11,    14,
+      15,    16,    17,    18,     8,    20,    21,    22,    23,    24,
+      25,    26,    31,    32,    78,    79,    10,     5,   133,     8,
+      16,    27,    37,    14,    15,    16,    17,    18,    43,    20,
+      21,    22,    23,    24,    25,    26,    16,    27,    28,    29,
+      30,    31,    32,     6,    12,    12,    37,    14,    15,    16,
+      17,     6,    43,    14,    21,    22,    23,    24,    25,    26,
+      14,    15,    16,    17,    12,     6,     9,    21,    22,    23,
+      24,    25,    26,    27,    14,    15,    16,    17,     9,    13,
+       6,    21,    22,    23,    24,    25,    26,    14,    15,    16,
+      17,    14,    28,    14,    21,    22,    23,    24,    25,    26,
+      28,    14,    14,    13,    13,    13,     6,    40,    40,     6,
+       9,    14,    14,     6,     6,     6,     6,     6,    13,    56,
+      66,    74,    52
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
      symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     5,    34,    35,     6,     0,     7,    36,     8,    11,
-      42,     3,     4,    37,    38,    39,     8,    10,    52,    38,
-       8,    16,    18,    20,    43,    44,    50,     5,    16,    40,
-      41,    12,    17,    21,    22,    23,    24,    25,    26,    27,
-      47,    48,    16,    29,    30,    45,    46,    44,     6,    12,
-       6,     9,    14,    14,    15,    14,    15,    14,    15,    14,
-      15,    14,    15,    14,    15,    14,    15,    50,     6,    48,
-       9,     9,     9,     6,    46,    14,    41,    13,     6,     6,
-      28,    43,    13,    17,    21,    22,    23,    24,    25,    26,
-      31,    32,    10,    19,    49,    51,    14,    15,    14,    15,
-      14,    15,    14,    15,    14,    15,    14,    15,    14,    15,
-      18,     6,    43,     6,     6,     6,    51
+       0,     5,    45,    46,     6,     0,     7,    47,     8,    11,
+      53,     3,     4,    48,    49,    50,     8,    10,    70,    49,
+       8,    14,    15,    16,    17,    18,    20,    21,    22,    23,
+      24,    25,    26,    37,    43,    54,    55,    64,    65,    68,
+       5,    16,    51,    52,    12,    16,    65,    66,    67,    68,
+      27,    59,    60,    16,    29,    30,    56,    57,    66,    66,
+      66,    66,    66,    66,    27,    61,    62,    64,    16,    63,
+      55,     6,    12,     6,     9,    14,    12,     6,    33,    34,
+      35,    36,    64,     6,    59,     9,    12,     9,     9,     6,
+      57,    64,     6,    61,    41,    42,    54,    65,    52,    13,
+      14,    67,    67,    68,    68,    28,    54,    14,    28,    54,
+      14,    14,    10,    69,    13,    65,    13,    31,    32,    19,
+      58,    69,    13,    31,    32,    69,    40,    40,    18,    37,
+      43,     6,     6,    54,     9,    14,    14,     6,     6,     6,
+      69,     6,     6
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    33,    34,    35,    36,    36,    37,    37,    38,    39,
-      39,    40,    40,    41,    41,    42,    42,    43,    43,    44,
-      44,    44,    44,    45,    45,    46,    46,    46,    46,    46,
-      46,    47,    47,    48,    48,    48,    49,    50,    50,    50,
-      50,    50,    50,    50,    50,    50,    50,    50,    50,    50,
-      50,    50,    50,    50,    50,    50,    50,    50,    50,    50,
-      50,    50,    50,    50,    50,    51,    52
+       0,    44,    45,    46,    47,    47,    48,    48,    49,    50,
+      50,    51,    51,    52,    52,    53,    53,    54,    54,    55,
+      55,    55,    55,    55,    55,    56,    56,    57,    57,    57,
+      57,    57,    57,    57,    57,    58,    59,    59,    60,    60,
+      60,    61,    61,    62,    62,    62,    62,    63,    63,    64,
+      64,    64,    64,    64,    65,    65,    65,    65,    65,    65,
+      65,    65,    66,    66,    66,    67,    67,    67,    68,    68,
+      68,    68,    69,    69,    69,    70
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
        0,     2,     4,     2,     2,     3,     1,     2,     4,     1,
-       1,     1,     3,     1,     4,     2,     3,     1,     2,     1,
-       3,     7,     5,     1,     2,     1,     2,     1,     2,     1,
-       2,     1,     2,     3,     4,     4,     2,     4,     4,     7,
-       7,     3,     6,     3,     6,     3,     6,     3,     6,     3,
-       6,     3,     6,     3,     6,     3,     6,     3,     6,     3,
-       6,     3,     6,     3,     6,     3,     3
+       1,     1,     3,     1,     4,     2,     3,     1,     2,     3,
+       5,     7,     5,     4,     1,     1,     2,     1,     2,     1,
+       2,     4,     5,     1,     2,     2,     1,     2,     4,     3,
+       4,     1,     2,     4,     3,     4,     1,     6,     6,     3,
+       6,     2,     5,     1,     2,     2,     2,     2,     2,     2,
+       2,     1,     3,     3,     1,     3,     3,     1,     1,     1,
+       1,     4,     3,     3,     3,     3
 };
 
 
@@ -1372,397 +1439,539 @@ yyreduce:
   switch (yyn)
     {
         case 9:
-#line 89 "checkpoint7.y" /* yacc.c:1646  */
+#line 115 "checkpoint7.y" /* yacc.c:1646  */
     {
 					dtype = DT_INT;
 				}
-#line 1380 "y.tab.c" /* yacc.c:1646  */
+#line 1447 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 93 "checkpoint7.y" /* yacc.c:1646  */
+#line 119 "checkpoint7.y" /* yacc.c:1646  */
     {
 					dtype = DT_REAL;
 				}
-#line 1388 "y.tab.c" /* yacc.c:1646  */
+#line 1455 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 103 "checkpoint7.y" /* yacc.c:1646  */
+#line 129 "checkpoint7.y" /* yacc.c:1646  */
     {
 					createNode((yyvsp[0].sval), dtype, adCount, TP_SCALAR, 1);
 					adCount++;
 				}
-#line 1397 "y.tab.c" /* yacc.c:1646  */
+#line 1464 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 108 "checkpoint7.y" /* yacc.c:1646  */
+#line 134 "checkpoint7.y" /* yacc.c:1646  */
     {
-					createNode((yyvsp[-3].sval), dtype, adCount, TP_ARRAY, (yyvsp[-1].ival));
-					adCount += (yyvsp[-1].ival);
+					createNode((yyvsp[-3].sval), dtype, adCount, TP_ARRAY, (int)(yyvsp[-1].ex)->value);
+					adCount += (int)(yyvsp[-1].ex)->value;
 				}
-#line 1406 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 25:
-#line 133 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[0].sval), 8, 0, 0, 1);
-					lines += charCount((yyvsp[0].sval)) * 2;
-				}
-#line 1415 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 26:
-#line 139 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-1].sval), 8, 0, 0, 1);
-					lines += charCount((yyvsp[-1].sval)) * 2;
-				}
-#line 1424 "y.tab.c" /* yacc.c:1646  */
+#line 1473 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 145 "checkpoint7.y" /* yacc.c:1646  */
+#line 161 "checkpoint7.y" /* yacc.c:1646  */
     {
-					createSTree((yyvsp[0].sval), 8, 0, 0, 3);
-					lines += 3;
+					struct expression *pr = malloc(sizeof(struct expression));
+					pr->value = 0;
+					pr->op = 8;
+					createSTree((yyvsp[0].sval), pr, 0, 1, andor);
+					lines += charCount((yyvsp[0].sval)) * 2;
 				}
-#line 1433 "y.tab.c" /* yacc.c:1646  */
+#line 1485 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 151 "checkpoint7.y" /* yacc.c:1646  */
+#line 170 "checkpoint7.y" /* yacc.c:1646  */
     {
-					createSTree((yyvsp[-1].sval), 8, 0, 0, 3);
-					lines += 3;
+					struct expression *pr = malloc(sizeof(struct expression));
+					pr->value = 0;
+					pr->op = 8;
+					createSTree((yyvsp[-1].sval), pr, 0, 1, andor);
+					lines += charCount((yyvsp[-1].sval)) * 2;
 				}
-#line 1442 "y.tab.c" /* yacc.c:1646  */
+#line 1497 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 157 "checkpoint7.y" /* yacc.c:1646  */
+#line 179 "checkpoint7.y" /* yacc.c:1646  */
     {
-					createSTree(NULL, 8, 0, 0, 2);
-					lines++;
+					struct expression *pr = malloc(sizeof(struct expression));
+					pr->value = 0;
+					pr->op = 8;
+					createSTree((yyvsp[0].sval), pr, 0, 3, andor);
+					lines += 3;
 				}
-#line 1451 "y.tab.c" /* yacc.c:1646  */
+#line 1509 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 163 "checkpoint7.y" /* yacc.c:1646  */
+#line 188 "checkpoint7.y" /* yacc.c:1646  */
     {
-					createSTree(NULL, 8, 0, 0, 2);
-					lines++;
+					struct expression *pr = malloc(sizeof(struct expression));
+					pr->value = 0;
+					pr->op = 8;
+					createSTree((yyvsp[-1].sval), pr, 0, 3, andor);
+					lines += 3;
 				}
-#line 1460 "y.tab.c" /* yacc.c:1646  */
+#line 1521 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 31:
+#line 196 "checkpoint7.y" /* yacc.c:1646  */
+    {
+					struct expression *pr = malloc(sizeof(struct expression));
+					pr->value = 0;
+					pr->op = 8;
+					createSTree((yyvsp[-3].sval), pr, (yyvsp[-1].ival), 3, andor);
+					lines += 3;
+				}
+#line 1533 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 32:
+#line 205 "checkpoint7.y" /* yacc.c:1646  */
+    {
+					struct expression *pr = malloc(sizeof(struct expression));
+					pr->value = 0;
+					pr->op = 8;
+					createSTree((yyvsp[-4].sval), pr, (yyvsp[-2].ival), 3, andor);
+					lines += 3;
+				}
+#line 1545 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 175 "checkpoint7.y" /* yacc.c:1646  */
+#line 214 "checkpoint7.y" /* yacc.c:1646  */
     {
-					condNum++;
+					struct expression *pr = malloc(sizeof(struct expression));
+					pr->value = 0;
+					pr->op = 8;
+					createSTree(NULL, pr, 0, 2, andor);
+					lines++;
 				}
-#line 1468 "y.tab.c" /* yacc.c:1646  */
+#line 1557 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 180 "checkpoint7.y" /* yacc.c:1646  */
+#line 223 "checkpoint7.y" /* yacc.c:1646  */
     {
-					condNum++;
+					struct expression *pr = malloc(sizeof(struct expression));
+					pr->value = 0;
+					pr->op = 8;
+					createSTree(NULL, pr, 0, 2, andor);
+					lines++;
 				}
-#line 1476 "y.tab.c" /* yacc.c:1646  */
+#line 1569 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 185 "checkpoint7.y" /* yacc.c:1646  */
+#line 234 "checkpoint7.y" /* yacc.c:1646  */
     {
-					condNum++;
+					if(elseCheck == 0){
+						push(lines + 1);
+						lines++;
+						elseCheck = 1;
+					}
 				}
-#line 1484 "y.tab.c" /* yacc.c:1646  */
+#line 1581 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 36:
-#line 192 "checkpoint7.y" /* yacc.c:1646  */
+  case 38:
+#line 248 "checkpoint7.y" /* yacc.c:1646  */
+    {
+					andor = 1;
+					condNum++;
+					push(lines + 5);
+				}
+#line 1591 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 39:
+#line 254 "checkpoint7.y" /* yacc.c:1646  */
+    {
+					andor = -1;
+					condNum++;
+				}
+#line 1600 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 40:
+#line 260 "checkpoint7.y" /* yacc.c:1646  */
+    {
+					andor = 0;
+					condNum++;
+				}
+#line 1609 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 43:
+#line 271 "checkpoint7.y" /* yacc.c:1646  */
+    {
+					andor = 1;
+					condNum++;
+					push(lines + 5);
+					whileArray[whilecount] = lines - 6;
+					whilecount++;
+				}
+#line 1621 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 44:
+#line 279 "checkpoint7.y" /* yacc.c:1646  */
+    {
+					andor = -1;
+					condNum++;
+					whileArray[whilecount] = lines - 6;
+					whilecount++;
+				}
+#line 1632 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 45:
+#line 287 "checkpoint7.y" /* yacc.c:1646  */
+    {
+					andor = 0;
+					condNum++;
+					whileArray[whilecount] = lines - 6;
+					whilecount++;
+				}
+#line 1643 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 46:
+#line 294 "checkpoint7.y" /* yacc.c:1646  */
+    {
+					andor = -1;
+					condNum++;
+					whileArray[whilecount] = lines - 6;
+					whilecount++;
+				}
+#line 1654 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 47:
+#line 303 "checkpoint7.y" /* yacc.c:1646  */
+    {
+						(yyval.ex) = (struct expression*)malloc(sizeof(struct expression));
+						(yyval.ex)->value = (float)(yyvsp[-3].ival);
+						(yyval.ex)->op = 1;
+						createSTree((yyvsp[-5].sval), (yyval.ex), 0, 0, 0);
+						lines += 3;
+						struct expression* tmp= (struct expression*)malloc(sizeof(struct expression));
+						tmp->value = (float)(yyvsp[-1].ival);
+						tmp->op = 3;
+						createSTree((yyvsp[-5].sval), tmp, 0, 0, 0);
+						lines += 4;
+					}
+#line 1671 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 48:
+#line 316 "checkpoint7.y" /* yacc.c:1646  */
+    {
+						struct expression* tmp = (struct expression*)malloc(sizeof(struct expression));
+						tmp->value = (float)(yyvsp[-3].ival);
+						tmp->op = 1;
+						createSTree((yyvsp[-5].sval), tmp, 0, (yyvsp[-1].ival), 0);
+					}
+#line 1682 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 49:
+#line 325 "checkpoint7.y" /* yacc.c:1646  */
+    {
+					if(elseCheck == 1){
+						createSTree((yyvsp[-2].sval), (yyvsp[-1].ex), 0, 4, andor);
+						elseCheck = 0;
+					}else{
+						createSTree((yyvsp[-2].sval), (yyvsp[-1].ex), 0, 0, andor);
+					}
+					rootMath = NULL;
+				}
+#line 1696 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 50:
+#line 335 "checkpoint7.y" /* yacc.c:1646  */
+    {
+					if(elseCheck == 1){
+						createSTree((yyvsp[-5].sval), (yyvsp[-1].ex), (yyvsp[-3].ival), 4, andor);
+						elseCheck = 0;
+					}else{
+						createSTree((yyvsp[-5].sval), (yyvsp[-1].ex), (yyvsp[-3].ival), 0, andor);
+					}
+					rootMath = NULL;
+				}
+#line 1710 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 51:
+#line 345 "checkpoint7.y" /* yacc.c:1646  */
+    {
+					if(elseCheck == 1){
+						createSTree((yyvsp[-1].sval), (yyvsp[0].ex), 0, 4, andor);
+						elseCheck = 0;
+					}else{
+						createSTree((yyvsp[-1].sval), (yyvsp[0].ex), 0, 0, andor);
+					}
+					rootMath = NULL;
+				}
+#line 1724 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 52:
+#line 356 "checkpoint7.y" /* yacc.c:1646  */
+    {
+					if(elseCheck == 1){
+						createSTree((yyvsp[-4].sval), (yyvsp[0].ex), (yyvsp[-2].ival), 4, andor);
+						elseCheck = 0;
+					}else{
+						createSTree((yyvsp[-4].sval), (yyvsp[0].ex), (yyvsp[-2].ival), 0, andor);
+					}
+					rootMath = NULL;
+				}
+#line 1738 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 54:
+#line 369 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ex) = malloc(sizeof(struct expression));
+				(yyval.ex)->value = (yyvsp[0].ml)->value;
+				(yyval.ex)->op = 7;
+				(yyval.ex)->link = (yyvsp[0].ml);
+				lines += 5;
+			}
+#line 1750 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 55:
+#line 377 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ex) = malloc(sizeof(struct expression));
+				(yyval.ex)->value = (yyvsp[0].ml)->value;
+				(yyval.ex)->op = 6;
+				(yyval.ex)->link = (yyvsp[0].ml);
+				lines += 5;
+			}
+#line 1762 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 56:
+#line 385 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ex) = malloc(sizeof(struct expression));
+				(yyval.ex)->value = (yyvsp[0].ml)->value;
+				(yyval.ex)->op = 5;
+				(yyval.ex)->link = (yyvsp[0].ml);
+				lines += 5;
+			}
+#line 1774 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 57:
+#line 393 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ex) = malloc(sizeof(struct expression));
+				(yyval.ex)->value = (yyvsp[0].ml)->value;
+				(yyval.ex)->op = 4;
+				(yyval.ex)->link = (yyvsp[0].ml);
+				lines += 5;
+			}
+#line 1786 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 58:
+#line 401 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ex) = malloc(sizeof(struct expression));
+				(yyval.ex)->value = (yyvsp[0].ml)->value;
+				(yyval.ex)->op = 3;
+				(yyval.ex)->link = (yyvsp[0].ml);
+				lines += 5;
+			}
+#line 1798 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 59:
+#line 409 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ex) = malloc(sizeof(struct expression));
+				(yyval.ex)->value = (yyvsp[0].ml)->value;
+				(yyval.ex)->op = 2;
+				(yyval.ex)->link = (yyvsp[0].ml);
+				lines += 5;
+			}
+#line 1810 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 60:
+#line 417 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ex) = malloc(sizeof(struct expression));
+				(yyval.ex)->value = (yyvsp[0].ml)->value;
+				(yyval.ex)->op = 1;
+				(yyval.ex)->link = (yyvsp[0].ml);
+				lines += 3;
+			}
+#line 1822 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 61:
+#line 426 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ex) = malloc(sizeof(struct expression));
+				(yyval.ex)->value = (yyvsp[0].ml)->value;
+				(yyval.ex)->op = 1;
+			}
+#line 1832 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 62:
+#line 434 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ml) = malloc(sizeof(struct mathlist));
+				(yyval.ml)->op = 9;
+				(yyval.ml)->lop = (yyvsp[-2].ml);
+				(yyval.ml)->rop = (yyvsp[0].ml);
+				lines += 2;
+			}
+#line 1844 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 63:
+#line 442 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ml) = malloc(sizeof(struct mathlist));
+				(yyval.ml)->op = 10;
+				(yyval.ml)->rop = (yyvsp[-2].ml);
+				(yyval.ml)->lop = (yyvsp[0].ml);
+				lines += 2;
+			}
+#line 1856 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 64:
+#line 450 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ml) = (yyvsp[0].ml);
+		 	}
+#line 1864 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 65:
+#line 456 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ml) = malloc(sizeof(struct mathlist));
+				(yyval.ml)->op = 11;
+				(yyval.ml)->rop = (yyvsp[-2].ml);
+				(yyval.ml)->lop = (yyvsp[0].ml);
+				lines += 2;
+			}
+#line 1876 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 66:
+#line 464 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ml) = malloc(sizeof(struct mathlist));
+				(yyval.ml)->op = 12;
+				(yyval.ml)->lop = (yyvsp[-2].ml);
+				(yyval.ml)->rop = (yyvsp[0].ml);
+				lines += 2;
+			}
+#line 1888 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 67:
+#line 472 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ml) = (yyvsp[0].ml);
+			}
+#line 1896 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 68:
+#line 478 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ml) = malloc(sizeof(struct mathlist));
+				(yyval.ml)->value = (float)(yyvsp[0].ival);
+				(yyval.ml)->isVar = 0;
+			}
+#line 1906 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 69:
+#line 484 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				(yyval.ml) = malloc(sizeof(struct mathlist));
+				(yyval.ml)->value = (yyvsp[0].rval);
+				(yyval.ml)->isVar = 0;
+			}
+#line 1916 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 70:
+#line 490 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				struct syntree* tmp = (struct syntree*)malloc(sizeof(struct syntree));
+				tmp->id = (yyvsp[0].sval);
+				(yyval.ml) = malloc(sizeof(struct mathlist));
+				(yyval.ml)->value = lookup(tmp)->address;
+				(yyval.ml)->isVar = 1;
+				lines += 1;
+			}
+#line 1929 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 71:
+#line 499 "checkpoint7.y" /* yacc.c:1646  */
+    {
+				struct syntree* tmp = (struct syntree*)malloc(sizeof(struct syntree));
+				tmp->id = (yyvsp[-3].sval);
+				(yyval.ml) = malloc(sizeof(struct mathlist));
+				(yyval.ml)->value = lookup(tmp)->address + (yyvsp[-1].ival);
+				(yyval.ml)->isVar = 1;
+				lines += 1;
+			}
+#line 1942 "y.tab.c" /* yacc.c:1646  */
+    break;
+
+  case 72:
+#line 511 "checkpoint7.y" /* yacc.c:1646  */
     {
 					for(int i = 0; i < condNum; i++){
 						push(lines);
 					}
 					condNum = 0;
-					elseCheck = 1;
+					elseCheck = 0;
 				}
-#line 1496 "y.tab.c" /* yacc.c:1646  */
+#line 1954 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 37:
-#line 202 "checkpoint7.y" /* yacc.c:1646  */
+  case 73:
+#line 519 "checkpoint7.y" /* yacc.c:1646  */
     {
-					createSTree((yyvsp[-3].sval), 1, (float)(yyvsp[-1].ival), 0, 0);
-					lines += 3;
-				}
-#line 1505 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 38:
-#line 208 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-3].sval), 1, (yyvsp[-1].rval), 0, 0);
-					lines += 3;
-				}
-#line 1514 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 39:
-#line 214 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-6].sval), 1, (float)(yyvsp[-1].ival), (yyvsp[-4].ival), 0);
-					lines += 3;
-				}
-#line 1523 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 40:
-#line 220 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-6].sval), 1, (yyvsp[-1].rval), (yyvsp[-4].ival), 0);
-					lines += 3;
-				}
-#line 1532 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 41:
-#line 226 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-2].sval), 2, (float)(yyvsp[0].ival), 0, 0);
-					lines += 5;
-				}
-#line 1541 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 42:
-#line 232 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-5].sval), 2, (float)(yyvsp[0].ival), (yyvsp[-3].ival), 0);
-					lines += 5;
-				}
-#line 1550 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 43:
-#line 237 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-2].sval), 2, (yyvsp[0].rval), 0, 1);
-					lines += 5;
-				}
-#line 1559 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 44:
-#line 243 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-5].sval), 2, (yyvsp[0].rval), (yyvsp[-3].ival), 1);
-					lines += 5;
-				}
-#line 1568 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 45:
-#line 249 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-2].sval), 3, (float)(yyvsp[0].ival), 0, 0);
-					lines += 5;
-				}
-#line 1577 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 46:
-#line 255 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-5].sval), 3, (float)(yyvsp[0].ival), (yyvsp[-3].ival), 0);
-					lines += 5;
-				}
-#line 1586 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 47:
-#line 261 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-2].sval), 3, (yyvsp[0].rval), 0, 0);
-					lines += 5;
-				}
-#line 1595 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 48:
-#line 267 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-5].sval), 3, (yyvsp[0].rval), (yyvsp[-3].ival), 0);
-					lines += 5;
-				}
-#line 1604 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 49:
-#line 273 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-2].sval), 4, (float)(yyvsp[0].ival), 0, 0);
-					lines += 5;
-				}
-#line 1613 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 50:
-#line 279 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-5].sval), 4, (float)(yyvsp[0].ival), (yyvsp[-3].ival), 0);
-					lines += 5;
-				}
-#line 1622 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 51:
-#line 285 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-2].sval), 4, (yyvsp[0].rval), 0, 0);
-					lines += 5;
-				}
-#line 1631 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 52:
-#line 291 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-5].sval), 4, (yyvsp[0].rval), (yyvsp[-3].ival), 0);
-					lines += 5;
-				}
-#line 1640 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 53:
-#line 297 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-2].sval), 5, (float)(yyvsp[0].ival), 0, 0);
-					lines += 5;
-				}
-#line 1649 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 54:
-#line 303 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-5].sval), 5, (float)(yyvsp[0].ival), (yyvsp[-3].ival), 0);
-					lines += 5;
-				}
-#line 1658 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 55:
-#line 309 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-2].sval), 5, (yyvsp[0].rval), 0, 0);
-					lines += 5;
-				}
-#line 1667 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 56:
-#line 315 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-5].sval), 5, (yyvsp[0].rval), (yyvsp[-3].ival), 0);
-					lines += 5;
-				}
-#line 1676 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 57:
-#line 321 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-2].sval), 6, (float)(yyvsp[0].ival), 0, 0);
-					lines += 5;
-				}
-#line 1685 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 58:
-#line 327 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-5].sval), 6, (float)(yyvsp[0].ival), (yyvsp[-3].ival), 0);
-					lines += 5;
-				}
-#line 1694 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 59:
-#line 333 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-2].sval), 6, (yyvsp[0].rval), 0, 0);
-					lines += 5;
-				}
-#line 1703 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 60:
-#line 339 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-5].sval), 6, (yyvsp[0].rval), (yyvsp[-3].ival), 0);
-					lines += 5;
-				}
-#line 1712 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 61:
-#line 345 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-2].sval), 7, (float)(yyvsp[0].ival), 0, 0);
-					lines += 5;
-				}
-#line 1721 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 62:
-#line 351 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-5].sval), 7, (float)(yyvsp[0].ival), (yyvsp[-3].ival), 0);
-					lines += 5;
-				}
-#line 1730 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 63:
-#line 357 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-2].sval), 7, (yyvsp[0].rval), 0, 0);
-					lines += 5;
-				}
-#line 1739 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 64:
-#line 363 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					createSTree((yyvsp[-5].sval), 7, (yyvsp[0].rval), (yyvsp[-3].ival), 0);
-					lines += 5;
-				}
-#line 1748 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 65:
-#line 370 "checkpoint7.y" /* yacc.c:1646  */
-    {
-					if(!elseCheck){
-						for(int i = 0; i < condNum; i++){
-							push(lines);
-						}
+					for(int i = 0; i < condNum; i++){
+						push(lines + 1);
 					}
 					condNum = 0;
 					elseCheck = 0;
+					lines++;
+					struct expression* tmp = (struct expression*)malloc(sizeof(struct expression));
+					tmp->value = (float)whileArray[whilecount - 1];
+					tmp->op = 13;
+					createSTree(NULL, tmp, 0, 5, 0);
 				}
-#line 1762 "y.tab.c" /* yacc.c:1646  */
+#line 1971 "y.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1766 "y.tab.c" /* yacc.c:1646  */
+#line 1975 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1990,7 +2199,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 384 "checkpoint7.y" /* yacc.c:1906  */
+#line 538 "checkpoint7.y" /* yacc.c:1906  */
 
 
 int yyerror() {

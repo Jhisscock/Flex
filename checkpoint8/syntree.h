@@ -1,9 +1,9 @@
 /*
  * ==========================================================================
  * 
- * checkpoint7.y ----- Syntax tree and function declaration.
+ * checkpoint8.y ----- Syntax tree and function declaration.
  * Programmer --- Jacob Hisscock
- * Date --- 11/19/2020
+ * Date --- 12/8/2020
  * 
  * ==========================================================================
  */

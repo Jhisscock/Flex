@@ -74,7 +74,18 @@ extern int yydebug;
     EXC = 284,
     STRING = 285,
     AND = 286,
-    OR = 287
+    OR = 287,
+    PLUS = 288,
+    MINUS = 289,
+    MULTIPLY = 290,
+    DIVIDE = 291,
+    WHILE = 292,
+    EXIT = 293,
+    READ = 294,
+    TO = 295,
+    DOWNWARDS = 296,
+    UPWARDS = 297,
+    COUNTING = 298
   };
 #endif
 /* Tokens.  */
@@ -108,19 +119,32 @@ extern int yydebug;
 #define STRING 285
 #define AND 286
 #define OR 287
+#define PLUS 288
+#define MINUS 289
+#define MULTIPLY 290
+#define DIVIDE 291
+#define WHILE 292
+#define EXIT 293
+#define READ 294
+#define TO 295
+#define DOWNWARDS 296
+#define UPWARDS 297
+#define COUNTING 298
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 33 "checkpoint7.y" /* yacc.c:1909  */
+#line 40 "checkpoint7.y" /* yacc.c:1909  */
 
    char *sval;
    int ival;
    float rval;
+   struct expression *ex;
+   struct mathlist *ml;
 
-#line 124 "y.tab.h" /* yacc.c:1909  */
+#line 148 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

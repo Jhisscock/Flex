@@ -12,8 +12,4 @@ main;
 		Diff[5] := 1;
 		tmp := 1 - 2 * 3 + 8 / 4 * NewEst / Diff[5];
 		test := 20;
-		counting test downwards 10 to 0;
-			print test;
-		end counting;
-		print Diff[5];
 end main;

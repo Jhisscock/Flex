@@ -2,10 +2,10 @@
 
 /*
  * ========================================================================
- * checkpoint7.l --- Scanner for slic file.
+ * checkpoint8.l --- Scanner for slic file.
  * 
  * Programmer --- Jacob Hisscock
- * Date --- 11/5/2020
+ * Date --- 12/8/2020
  * 
  * ========================================================================
  */
@@ -134,6 +134,11 @@ STRING \"(\\.|[^"\\])*\"
                               return(RBRACKET);
                             }
 
+[eE][nN][dD][ ][mM][aA][iI][nN] {
+                                  if (DEBUG) printf(yytext);
+                                  return(ENDMAIN);
+                                }
+
 [rR][eE][aA][dD]            {
                               if (DEBUG) printf(yytext);
                               return(READ);
@@ -144,12 +149,12 @@ STRING \"(\\.|[^"\\])*\"
                               return(TO);
                             }
 
-[dD][oO][wW][nN][wW][aA][rR][dD][sS]   {
+[dD][oO][wW][nN][wW][aA][rR][dD]   {
                                         if (DEBUG) printf(yytext);
                                         return(DOWNWARDS);
                                       }
 
-[uU][pP][wW][aA][rR][dD][sS]    {
+[uU][pP][wW][aA][rR][dD]    {
                                   if (DEBUG) printf(yytext);
                                   return(UPWARDS);
                                 }
@@ -235,7 +240,7 @@ STRING \"(\\.|[^"\\])*\"
                               if (DEBUG) printf(yytext);
                               yylval.sval = strdup(yytext);
                               return(STRING);
-}                           
+                            }                           
 
 {FLOAT}                     { if (DEBUG) printf(yytext);}
 

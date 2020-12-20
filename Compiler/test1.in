@@ -1,0 +1,27 @@
+#==========================================================================
+# File--------sort.slic
+# Programmer--Bryan Crawley
+# Project-----Selection Sort
+#
+# This program performs a Selection Sort on a list of 10 integers.
+# The list is held in a one-dimensional array.
+#==========================================================================
+
+main;
+	data:
+		integer: Temp, Top, J, List[10];
+		integer: MaxLoc, Size;
+
+	algorithm:
+		Size := 10;
+
+		# Read in the list
+		counting J upward Size to 12;
+			print "Element #", J, ": ";
+			read Temp;
+			List[J] := Temp;
+		end counting;
+
+		print !;
+		exit;
+end main;

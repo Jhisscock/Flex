@@ -8,7 +8,7 @@
  *                for if/else statements and print statements
  * 
  * Programmer --- Jacob Hisscock
- * Date --- 11/19/2020
+ * Date --- 12/8/2020
  * 
  * ========================================================================
  */
@@ -189,7 +189,7 @@ int expEval()
 {
    displayTree();
    FILE *fp;
-   fp = fopen("c7.gstal", "w");
+   fp = fopen("c8.gstal", "w");
    fprintf(fp, "ISP %d\n", adCount);
    lineNum++;
    

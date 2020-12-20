@@ -3,11 +3,11 @@
 /*
  * ==========================================================================
  * 
- * checkpoint7.y ----- Bison parser for the slic language. Added support for 
+ * checkpoint8.y ----- Bison parser for the slic language. Added support for 
  					   if/else statements and print statements in algorithm
 						section
  * Programmer --- Jacob Hisscock
- * Date --- 11/19/2020
+ * Date --- 12/8/2020
  * 
  * ==========================================================================
  */
